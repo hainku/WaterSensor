@@ -1,0 +1,9 @@
+ .label-margin{
+        display: inline-block;
+        transform: translateY(-3.2em);
+        margin-left:0.7em;
+        background-color:white;
+    }
+    #border{
+        box-shadow: 2px 5px 10px gray;
+    }
