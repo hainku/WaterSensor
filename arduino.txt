@@ -55,7 +55,7 @@ void loop() {
 
   // Calculate distance (cm)
   distance = (duration * 0.0343) / 2;
-  distance=250-distance;
+  distance=200-distance;
   if(distance<=30){
     digitalWrite(LED1, HIGH);
     digitalWrite(LED2, LOW);
