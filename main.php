@@ -107,8 +107,9 @@ $s=new Session();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         var r=JSON.parse(this.responseText);
-        var dist=parseFloat(r.distance);
-        if(dist<0){dist=0;}
+        var dist=parseInt(r.distance);
+        if(dist<=0){dist=0;}
+        if(dist>=200){dist=200;}
         document.getElementById("res").innerHTML = dist.toFixed(2);
         document.getElementById("time").innerHTML = r.time;
         lbl.shift();
