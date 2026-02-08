@@ -1,72 +1,117 @@
-<?php session_start();?>
+<?php session_start();
+require_once'Class/Session.php';
+//$s=new Session();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <?php include_once'Assets/include.php';?>
+    <title>Dashboard</title>
+    <?php
+    include_once'Assets/include.php';
+    ?>
+    <script src="Assets/chart.js"></script>
 </head>
 <body>
-    <?php
-    require_once'Class/User.php';
-    $u=new User();
-    if(isset($_POST['btnlogin'])){
-        $un=$_POST['un'];
-        $pw=$_POST['pw'];
-        $data=$u->login($un,$pw);
-        if($row=$data->fetch_assoc()){
-            $_SESSION['role']=$row['Role'];
-            if($row['Role']=='admin'){
-                header('location:main.php');
-            }else{
-                header('location:usermain.php');
-            }
-        }else{
-            echo'
-                <script>
-                    Swal.fire({
-                        title: "Login",
-                        text: "Invalid Username or Password",
-                        icon: "warning"
-                    });
-                </script>
-            ';
-        }
-    }
-    ?>
+  <?php 
+  include_once'Res/navbar.php';
+  include_once'Class/User.php';
+  $u=new User();
+  $residentcount=$u->residentcount();
+  $householdcount=$u->householdcount();
+  $usercount=$u->usercount();
+  
+  ?>
     <div class="container">
-        <form method="POST">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="container border p-4 mt-4 pb-5 pt-5" id="border">
-                        <div class="row justify-content-center">
-                            <img src="Res/Images/logo.png" class="w-50" alt="">
-                        </div>
-                        <div class="row mt-3">
-                            <h5 class="text-center text-primary">Water Level Monitor</h5>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-12">
-                                <input type="text" class="form-control position-relative text-center" name="un">
-                                <label for="un" class="position-relative label-margin"><i class="fa-solid fa-user"></i> Username</label>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <input type="password" class="form-control position-relative text-center" name="pw">
-                                <label for="un" class="position-relative label-margin"><i class="fa-solid fa-key"></i> Password</label>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button class="form-control btn btn-primary rounded-pill" name="btnlogin"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
-                            </div>
-                        </div>
+        <div class="row mt-4">
+            <div class="col-md-6 border rounded p-4 m-3" id="border">
+                <label for="myLineChart"><h5 class="text-primary"><i class="fa-solid fa-chart-line"></i> Water Level Sensor</h5></label>
+                <canvas id="myLineChart"></canvas>
+            </div>
+            <div class="col-md-5 rounded m-3">
+                <div class="row">
+                    <div class="col-md-4 pt-3 me-3 mb-3 rounded" id="border">
+                        <label for=""><h3 class="text-secondary"><i class="fa-solid fa-chart-simple text-primary"></i> Status</h3></label>
+                        <h3 id="res">-</h3>
+                        <div id="time" style="font-size:0.8em;">-</div>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
+    
 </body>
 </html>
+<script>
+  var myLineChart;
+    const ctx = document.getElementById('myLineChart').getContext('2d');
+    var lbl=[0,0,0,0,0,0];
+    var dt=['-','-',',','-','-','-'];
+    renderChart();
+    function renderChart(){
+      if (myLineChart) {
+        myLineChart.destroy(); // destroy old chart before re-creating
+      }
+    myLineChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        //labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+        labels: lbl,
+        datasets: [{
+          label: 'Water Level',
+          //data: [120, 150, 180, 90, 200, 250],
+          data: dt,
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0, 123, 255, 0.2)',
+          fill: true,
+          tension: 0.3, // smooth curve
+          pointRadius: 5,
+          pointBackgroundColor: 'blue'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            enabled: true
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+    function fetchwaterlevel() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var r=JSON.parse(this.responseText);
+        var dist=parseInt(r.distance);
+        if(dist<=0){dist=0;}
+        if(dist>=200){dist=200;}
+        document.getElementById("res").innerHTML = dist.toFixed(2);
+        document.getElementById("time").innerHTML = r.time;
+        lbl.shift();
+        dt.shift();
+        lbl.push(r.time);
+        dt.push(dist.toFixed(2));
+        renderChart();
+
+      }
+    };
+    xhttp.open("GET", "receiver.php", true);
+    xhttp.send();
+  }
+  setInterval(() => {
+    fetchwaterlevel();
+  }, 5000);
+  </script>
