@@ -18,9 +18,6 @@ require_once'Class/Session.php';
   include_once'Res/navbar.php';
   include_once'Class/User.php';
   $u=new User();
-  $residentcount=$u->residentcount();
-  $householdcount=$u->householdcount();
-  $usercount=$u->usercount();
   
   ?>
     <div class="container">
@@ -85,7 +82,8 @@ require_once'Class/Session.php';
           y: {
             beginAtZero: true
           }
-        }
+        },
+        animation:false
       }
     });
   }
@@ -113,5 +111,5 @@ require_once'Class/Session.php';
   }
   setInterval(() => {
     fetchwaterlevel();
-  }, 5000);
+  }, 1000);
   </script>
