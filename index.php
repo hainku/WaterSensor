@@ -1,7 +1,3 @@
-<?php session_start();
-require_once'Class/Session.php';
-//$s=new Session();
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,28 +7,42 @@ require_once'Class/Session.php';
     <?php
     include_once'Assets/include.php';
     ?>
-    <script src="Assets/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 <body>
   <?php 
   include_once'Res/navbar.php';
-  include_once'Class/User.php';
-  $u=new User();
-  
   ?>
     <div class="container">
         <div class="row mt-4">
-            <div class="col-md-6 border rounded p-4 m-3" id="border">
+            <div class="col-md-6 border rounded p-4 my-3 bg-white" id="border">
                 <label for="myLineChart"><h5 class="text-primary"><i class="fa-solid fa-chart-line"></i> Water Level Sensor</h5></label>
                 <canvas id="myLineChart"></canvas>
             </div>
-            <div class="col-md-5 rounded m-3">
-                <div class="row">
-                    <div class="col-md-4 pt-3 me-3 mb-3 rounded" id="border">
+            <div class="col-md-5 rounded m-3 bg-white p-4 me-3">
+                <div class="row ps-4 pt-3 justify-content-center">
+                    <div class="col-md-5 pt-3 me-3 mb-3 rounded" id="border">
                         <label for=""><h3 class="text-secondary"><i class="fa-solid fa-chart-simple text-primary"></i> Status</h3></label>
                         <h3 id="res">-</h3>
                         <div id="time" style="font-size:0.8em;">-</div>
                     </div>
+                </div>
+                <div class="row mt-2">
+                  <div class="col-md-12">
+                    <div class="row">
+                      <h6>Vision</h6>
+                      <div class="small text-secondary" style="text-align: justify;">
+                          To establish an efficient IoT-based water level monitoring and early warning system that strengthens disaster preparedness and environmental sustainability in Barangay Kinalaglagan.
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <h6>Mission</h6>
+                      <div class="small text-secondary" style="text-align: justify;">
+                          This system is developed to deliver real-time water level information, improve early flood detection mechanisms, and assist the community and local government units in implementing proactive disaster risk reduction strategies.
+                      </div>
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>
@@ -44,7 +54,7 @@ require_once'Class/Session.php';
   var myLineChart;
     const ctx = document.getElementById('myLineChart').getContext('2d');
     var lbl=[0,0,0,0,0,0];
-    var dt=['-','-',',','-','-','-'];
+    var dt=[0,0,0,0,0,0];
     renderChart();
     function renderChart(){
       if (myLineChart) {
@@ -69,6 +79,7 @@ require_once'Class/Session.php';
       },
       options: {
         responsive: true,
+        
         plugins: {
           legend: {
             display: true,
@@ -113,3 +124,12 @@ require_once'Class/Session.php';
     fetchwaterlevel();
   }, 1000);
   </script>
+
+
+
+<style>
+  body {
+  background: linear-gradient(to right, #dee4f5, #9db8ee);
+}
+
+</style>
