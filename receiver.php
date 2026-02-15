@@ -1,31 +1,74 @@
 <?php
 header('Content-Type: application/json');
+require_once 'Class/Reading.php';
 
-$file = "latest_distance.json"; // store as JSON instead of plain text
+date_default_timezone_set("Asia/Manila");
 
-// If distance is sent from ESP8266
+$r = new Reading();
+
+$dataFile    = "latest_distance.json";
+$saveTracker = "last_save.txt";
+
+/*
+|--------------------------------------------------------------------------
+| HANDLE ESP8266 DATA
+|--------------------------------------------------------------------------
+*/
 if (isset($_GET['distance'])) {
-    $distance = $_GET['distance'];
 
-    // Prepare data with distance + timestamp
+    // ✅ VALIDATE INPUT (VERY IMPORTANT)
+    if (!is_numeric($_GET['distance'])) {
+        echo json_encode([
+            'error' => 'Invalid distance value',
+            'raw'   => $_GET['distance']
+        ]);
+        exit;
+    }
+
+    $distance = (float) $_GET['distance'];
+    $now      = time();
+
+    // Optional clamp (avoid crazy values)
+    if ($distance < 0)   $distance = 0;
+    if ($distance > 500) $distance = 500;
+
     $data = [
         'distance' => $distance,
-        'time' => date("Y-m-d H:i:s")
+        'time'     => date("Y-m-d H:i:s"),
+        'db_saved' => false
     ];
 
-    // Save JSON to file
-    file_put_contents($file, json_encode($data));
+    // ✅ SAVE LATEST SENSOR VALUE (ALWAYS)
+    file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT));
+
+    // ✅ READ LAST DB SAVE TIME
+    $lastSave = file_exists($saveTracker)
+        ? (int) file_get_contents($saveTracker)
+        : 0;
+
+    // ✅ SAVE TO DB ONCE PER MINUTE
+    if (($now - $lastSave) >= 60) {
+        $r->save($distance);
+        file_put_contents($saveTracker, $now);
+        $data['db_saved'] = true;
+    }
 
     echo json_encode($data);
-} else {
-    // If no new data, show last saved JSON
-    if (file_exists($file)) {
-        echo file_get_contents($file);
-    } else {
-        echo json_encode([
-            'distance' => null,
-            'time' => 'No data yet'
-        ]);
-    }
+    exit;
 }
-?>
+
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD POLLING (NO NEW DATA)
+|--------------------------------------------------------------------------
+*/
+if (file_exists($dataFile)) {
+    echo file_get_contents($dataFile);
+} else {
+    echo json_encode([
+        'distance' => null,
+        'time'     => 'No data yet',
+        'db_saved' => false
+    ]);
+}
+exit;

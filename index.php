@@ -4,132 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <?php
-    include_once'Assets/include.php';
-    ?>
+
+    <?php include_once 'Assets/include.php'; ?>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <style>
+        body {
+            background: linear-gradient(to right, #dee4f5, #9db8ee);
+        }
+    </style>
 </head>
+
 <body>
-  <?php 
-  include_once'Res/navbar.php';
-  ?>
-    <div class="container">
-        <div class="row mt-4">
-            <div class="col-md-6 border rounded p-4 my-3 bg-white" id="border">
-                <label for="myLineChart"><h5 class="text-primary"><i class="fa-solid fa-chart-line"></i> Water Level Sensor</h5></label>
-                <canvas id="myLineChart"></canvas>
+
+<?php include_once 'Res/navbar.php'; ?>
+
+<div class="container">
+    <div class="row mt-4">
+
+        <!-- CHART -->
+        <div class="col-md-6 border rounded p-4 my-3 bg-white">
+            <h5 class="text-primary">
+                <i class="fa-solid fa-chart-line"></i> Water Level Sensor
+            </h5>
+            <canvas id="myLineChart"></canvas>
+        </div>
+
+        <!-- STATUS -->
+        <div class="col-md-5 rounded m-3 bg-white p-4">
+            <h3 class="text-secondary">
+                <i class="fa-solid fa-chart-simple text-primary"></i> Status
+            </h3>
+
+            <h3 id="res">-</h3>
+            <div id="time" style="font-size:0.8em;">-</div>
+
+            <hr>
+
+            <h6>Vision</h6>
+            <div class="small text-secondary" style="text-align: justify;">
+                To establish an efficient IoT-based water level monitoring and early warning system that strengthens
+                disaster preparedness and environmental sustainability in Barangay Kinalaglagan.
             </div>
-            <div class="col-md-5 rounded m-3 bg-white p-4 me-3">
-                <div class="row ps-4 pt-3 justify-content-center">
-                    <div class="col-md-5 pt-3 me-3 mb-3 rounded" id="border">
-                        <label for=""><h3 class="text-secondary"><i class="fa-solid fa-chart-simple text-primary"></i> Status</h3></label>
-                        <h3 id="res">-</h3>
-                        <div id="time" style="font-size:0.8em;">-</div>
-                    </div>
-                </div>
-                <div class="row mt-2">
-                  <div class="col-md-12">
-                    <div class="row">
-                      <h6>Vision</h6>
-                      <div class="small text-secondary" style="text-align: justify;">
-                          To establish an efficient IoT-based water level monitoring and early warning system that strengthens disaster preparedness and environmental sustainability in Barangay Kinalaglagan.
-                      </div>
-                    </div>
-                    <div class="row mt-2">
-                      <h6>Mission</h6>
-                      <div class="small text-secondary" style="text-align: justify;">
-                          This system is developed to deliver real-time water level information, improve early flood detection mechanisms, and assist the community and local government units in implementing proactive disaster risk reduction strategies.
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+            <h6 class="mt-3">Mission</h6>
+            <div class="small text-secondary" style="text-align: justify;">
+                This system delivers real-time water level information, improves early flood detection mechanisms,
+                and assists the community and LGUs in proactive disaster risk reduction strategies.
             </div>
         </div>
+
     </div>
-    
-</body>
-</html>
+</div>
+
+<!-- ===================== SCRIPT ===================== -->
 <script>
-  var myLineChart;
-    const ctx = document.getElementById('myLineChart').getContext('2d');
-    var lbl=[0,0,0,0,0,0];
-    var dt=[0,0,0,0,0,0];
-    renderChart();
-    function renderChart(){
-      if (myLineChart) {
-        myLineChart.destroy(); // destroy old chart before re-creating
-      }
-    myLineChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        //labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-        labels: lbl,
+let ctx = document.getElementById('myLineChart').getContext('2d');
+
+let labels = [];
+let dataPoints = [];
+
+let myLineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
         datasets: [{
-          label: 'Water Level',
-          //data: [120, 150, 180, 90, 200, 250],
-          data: dt,
-          borderColor: 'blue',
-          backgroundColor: 'rgba(0, 123, 255, 0.2)',
-          fill: true,
-          tension: 0.3, // smooth curve
-          pointRadius: 5,
-          pointBackgroundColor: 'blue'
+            label: 'Water Level',
+            data: dataPoints,
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0,123,255,0.2)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4
         }]
-      },
-      options: {
+    },
+    options: {
         responsive: true,
-        
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          },
-          tooltip: {
-            enabled: true
-          }
-        },
+        animation: false,
         scales: {
-          y: {
-            beginAtZero: true
-          }
-        },
-        animation:false
-      }
-    });
-  }
+            y: {
+                beginAtZero: true,
+                max: 150
+            }
+        }
+    }
+});
 
-    function fetchwaterlevel() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        var r=JSON.parse(this.responseText);
-        var dist=parseInt(r.distance);
-        if(dist<=0){dist=0;}
-        if(dist>=200){dist=200;}
-        document.getElementById("res").innerHTML = dist.toFixed(2);
-        document.getElementById("time").innerHTML = r.time;
-        lbl.shift();
-        dt.shift();
-        lbl.push(r.time);
-        dt.push(dist.toFixed(2));
-        renderChart();
+function fetchWaterLevel() {
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
 
-      }
+            let response;
+            try {
+                response = JSON.parse(xhr.responseText);
+            } catch (e) {
+                console.error("Invalid JSON:", xhr.responseText);
+                return;
+            }
+
+            let dist = parseFloat(response.distance);
+            if (isNaN(dist)) return;
+
+            // Clamp values
+            if (dist < 0) dist = 0;
+            if (dist > 150) dist = 150;
+
+            document.getElementById("res").innerHTML = dist.toFixed(2);
+            document.getElementById("time").innerHTML = response.time;
+
+            // Keep last 10 points only
+            if (labels.length >= 10) {
+                labels.shift();
+                dataPoints.shift();
+            }
+
+            labels.push(response.time);
+            dataPoints.push(dist);
+
+            myLineChart.update();
+        }
     };
-    xhttp.open("GET", "receiver.php", true);
-    xhttp.send();
-  }
-  setInterval(() => {
-    fetchwaterlevel();
-  }, 1000);
-  </script>
 
-
-
-<style>
-  body {
-  background: linear-gradient(to right, #dee4f5, #9db8ee);
+    // Cache-buster to force fresh data
+    xhr.open("GET", "receiver.php?_=" + Date.now(), true);
+    xhr.send();
 }
 
-</style>
+// Fetch every second
+setInterval(fetchWaterLevel, 1000);
+</script>
+
+</body>
+</html>
